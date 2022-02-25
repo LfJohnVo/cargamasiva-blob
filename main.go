@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -27,11 +28,7 @@ type Datos struct {
 }
 
 func conexion() (db *sql.DB, e error) {
-	//fmt.Println("Empieza conexión a base")
-
 	dbDestino := "root:@tcp(127.0.0.1:3306)/cbpeh"
-
-	//defer dbDestino.Close()
 
 	const (
 		USE_MYMYSQL = false // En caso de no funcionar un driver utiliza otro de mysql :3
@@ -100,12 +97,33 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		fileExtension := filepath.Ext("files/" + path)
+
 		// Convert []byte to string and print to screen
 		text := string(content)
 		id_expediente := archivo[0:14]
-		IdTipoArchivo := 6
-		t := time.Now()
 
+		IdTipoArchivo := 0
+		if fileExtension == ".doc" {
+			IdTipoArchivo = 1
+		} else if fileExtension == ".jfif" {
+			IdTipoArchivo = 2
+		} else if fileExtension == ".jpeg" {
+			IdTipoArchivo = 3
+		} else if fileExtension == ".jpg" {
+			IdTipoArchivo = 4
+		} else if fileExtension == ".pdf" {
+			IdTipoArchivo = 5
+		} else if fileExtension == ".png" {
+			IdTipoArchivo = 6
+		} else if fileExtension == ".docx" {
+			IdTipoArchivo = 7
+		} else {
+			fmt.Println(fileExtension, "has multiple digits")
+		}
+
+		t := time.Now()
 		hoy := t.Format("2006-01-02")
 		tiempo := t.Format("15:04:05")
 		descripcion := "CARGA HISTORICA"
