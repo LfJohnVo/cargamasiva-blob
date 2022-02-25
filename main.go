@@ -28,7 +28,8 @@ func conexion() (db *sql.DB, e error) {
 
 	dbDestino := "root:@tcp(127.0.0.1:3306)/cbpeh"
 
-	//defer dbConexion.Close()
+	//defer dbDestino.Close()
+
 	const (
 		USE_MYMYSQL = false // En caso de no funcionar un driver utiliza otro de mysql :3
 	)
@@ -79,7 +80,7 @@ func main() {
 	id_expediente := "CBPEH-128-2021"
 	IdTipoArchivo := 6
 	t := time.Now()
-	//fmt.Println(t.String())
+	
 	fmt.Printf("Fecha hoy: ")
 	hoy := t.Format("2006-01-02")
 	tiempo := t.Format("15:04:05")
