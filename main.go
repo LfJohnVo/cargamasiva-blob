@@ -29,7 +29,7 @@ type Datos struct {
 
 func conexion() (db *sql.DB, e error) {
 	dbDestino := "root:@tcp(127.0.0.1:3306)/cbpeh"
-
+	
 	const (
 		USE_MYMYSQL = false // En caso de no funcionar un driver utiliza otro de mysql :3
 	)
@@ -47,13 +47,18 @@ func conexion() (db *sql.DB, e error) {
 	}
 
 	db, err := sql.Open(driver, connstr)
+
+	db.SetConnMaxLifetime(0)
+	db.SetMaxIdleConns(0)
+	db.SetMaxOpenConns(0)
+
 	defer Recuperacion(dbDestino)
 	if err != nil {
 		panic(err.Error())
 		log.Println("No se conecto a la base")
+	} else {
+		//fmt.Printf("Conectado a la base destino %v\n", dbDestino)
 	}
-	//dbConexion, err := sql.Open("mysql", dbDestino)
-	//fmt.Println("Conectado a la base destino")
 
 	return db, nil
 }
@@ -79,7 +84,7 @@ func main() {
 	}
 
 	fmt.Println("Contando ....")
-	time.Sleep(time.Second * 1)
+	time.Sleep(time.Second * 2)
 	fmt.Printf("Total archivos: ")
 	fmt.Println(len(files))
 	fmt.Println("EMPIEZA INSERT")
@@ -104,57 +109,71 @@ func main() {
 		text := string(content)
 		id_expediente := archivo[0:14]
 
-		IdTipoArchivo := 0
-		if fileExtension == ".doc" {
-			IdTipoArchivo = 1
-		} else if fileExtension == ".jfif" {
-			IdTipoArchivo = 2
-		} else if fileExtension == ".jpeg" {
-			IdTipoArchivo = 3
-		} else if fileExtension == ".jpg" {
-			IdTipoArchivo = 4
-		} else if fileExtension == ".pdf" {
-			IdTipoArchivo = 5
-		} else if fileExtension == ".png" {
-			IdTipoArchivo = 6
-		} else if fileExtension == ".docx" {
-			IdTipoArchivo = 7
-		} else {
-			fmt.Println(fileExtension, "has multiple digits")
+		var count int
+		error := db.QueryRow("SELECT count(id_expediente) FROM cbpeh.archivo_expediente WHERE id_expediente = ?", id_expediente).Scan(&count)
+		switch {
+		case error != nil:
+			fmt.Println("Error al consultar")
+		default:
+			//fmt.Printf("Cantidad de registros : %v\n", count)
+			if count >= 1 {
+				log.Printf("Ya existe un registro: %v \n", archivo)
+				continue
+			} else {
+				IdTipoArchivo := 0
+				if fileExtension == ".doc" {
+					IdTipoArchivo = 1
+				} else if fileExtension == ".jfif" {
+					IdTipoArchivo = 2
+				} else if fileExtension == ".jpeg" {
+					IdTipoArchivo = 3
+				} else if fileExtension == ".jpg" {
+					IdTipoArchivo = 4
+				} else if fileExtension == ".pdf" {
+					IdTipoArchivo = 5
+				} else if fileExtension == ".png" {
+					IdTipoArchivo = 6
+				} else if fileExtension == ".docx" {
+					IdTipoArchivo = 7
+				} else {
+					fmt.Println(fileExtension, "has multiple digits")
+				}
+
+				t := time.Now()
+				hoy := t.Format("2006-01-02")
+				tiempo := t.Format("15:04:05")
+				descripcion := "CARGA HISTORICA"
+				id_perfil_carga := 2
+				id_busqueda := 0
+				estatus := 1
+				estatus_localizado := 0
+
+				c := Datos{
+					id_expediente:      id_expediente,
+					IdTipoArchivo:      IdTipoArchivo,
+					hoy:                hoy,
+					tiempo:             tiempo,
+					usuarioCarga:       "atencion_neixar",
+					path:               path,
+					text:               text,
+					descripcion:        descripcion,
+					id_perfil_carga:    id_perfil_carga,
+					id_busqueda:        id_busqueda,
+					estatus:            estatus,
+					estatus_localizado: estatus_localizado,
+				}
+
+				err = insertar(c)
+				if err != nil {
+					log.Printf("Error insertando: %v %v\n", err, archivo)
+				} else {
+					log.Printf("Insertado correctamente: %v \n", archivo)
+				}
+
+				time.Sleep(time.Second * 2)
+
+			}
 		}
-
-		t := time.Now()
-		hoy := t.Format("2006-01-02")
-		tiempo := t.Format("15:04:05")
-		descripcion := "CARGA HISTORICA"
-		id_perfil_carga := 2
-		id_busqueda := 0
-		estatus := 1
-		estatus_localizado := 0
-
-		c := Datos{
-			id_expediente:      id_expediente,
-			IdTipoArchivo:      IdTipoArchivo,
-			hoy:                hoy,
-			tiempo:             tiempo,
-			usuarioCarga:       "atencion_neixar",
-			path:               path,
-			text:               text,
-			descripcion:        descripcion,
-			id_perfil_carga:    id_perfil_carga,
-			id_busqueda:        id_busqueda,
-			estatus:            estatus,
-			estatus_localizado: estatus_localizado,
-		}
-
-		err = insertar(c)
-		if err != nil {
-			log.Printf("Error insertando: %v %v\n", err, archivo)
-		} else {
-			log.Printf("Insertado correctamente: %v \n", archivo)
-		}
-
-		time.Sleep(time.Second * 1)
 
 		i++
 	}
