@@ -4,27 +4,30 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/schollz/progressbar/v3"
+	"io/ioutil"
 	"log"
 	"os"
 	"time"
 )
 
 type Datos struct {
-	id_expediente   string
-	IdTipoArchivo   int
-	hoy             string
-	tiempo          string
-	usuarioCarga    string
-	path            string
-	text            string
-	descripcion     string
-	id_perfil_carga int
-	id_busqueda     int
-	estatus         int
+	id_expediente      string
+	IdTipoArchivo      int
+	hoy                string
+	tiempo             string
+	usuarioCarga       string
+	path               string
+	text               string
+	descripcion        string
+	id_perfil_carga    int
+	id_busqueda        int
+	estatus            int
+	estatus_localizado int
 }
 
 func conexion() (db *sql.DB, e error) {
-	fmt.Println("Empieza conexión a base")
+	//fmt.Println("Empieza conexión a base")
 
 	dbDestino := "root:@tcp(127.0.0.1:3306)/cbpeh"
 
@@ -50,10 +53,10 @@ func conexion() (db *sql.DB, e error) {
 	defer Recuperacion(dbDestino)
 	if err != nil {
 		panic(err.Error())
-		log.Print("No se conecto a la base")
+		log.Println("No se conecto a la base")
 	}
 	//dbConexion, err := sql.Open("mysql", dbDestino)
-	fmt.Println("Conectado a la base destino")
+	//fmt.Println("Conectado a la base destino")
 
 	return db, nil
 }
@@ -66,53 +69,83 @@ func main() {
 		fmt.Printf("Error conectando: %v", err)
 		return
 	}
-	// Listo, aquí ya podemos usar a db!
-	fmt.Println("Conectado correctamente")
 
-	path := "among.png"
-	content, err := os.ReadFile("files/" + path)
+	file, err := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
-	// Convert []byte to string and print to screen
-	text := string(content)
-	//fmt.Println(text)
-	id_expediente := "CBPEH-128-2021"
-	IdTipoArchivo := 6
-	t := time.Now()
-	
-	fmt.Printf("Fecha hoy: ")
-	hoy := t.Format("2006-01-02")
-	tiempo := t.Format("15:04:05")
-	descripcion := "IMAGEN DE COLABORACIONES RELACIONADAS AL EXPEDIENTE"
-	id_perfil_carga := 2
-	id_busqueda := 0
-	estatus := 1
+	log.SetOutput(file)
 
-	c := Datos{
-		id_expediente:   id_expediente,
-		IdTipoArchivo:   IdTipoArchivo,
-		hoy:             hoy,
-		tiempo:          tiempo,
-		usuarioCarga:    "atencion_neixar",
-		path:            path,
-		text:            text,
-		descripcion:     descripcion,
-		id_perfil_carga: id_perfil_carga,
-		id_busqueda:     id_busqueda,
-		estatus:         estatus,
-	}
-
-	err = insertar(c)
+	files, err := ioutil.ReadDir("files")
 	if err != nil {
-		fmt.Printf("Error insertando: %v", err)
-	} else {
-		fmt.Println("Insertado correctamente")
+		log.Fatal(err)
 	}
 
-	defer elapsed("Robot termino:")()
+	fmt.Println("Contando ....")
 	time.Sleep(time.Second * 1)
+	fmt.Printf("Total archivos: ")
+	fmt.Println(len(files))
+	fmt.Println("EMPIEZA INSERT")
+	log.Printf("/****************** EMPIEZA INSERT *******************/\n")
+
+	bar := progressbar.Default(int64(len(files)))
+
+	i := 0
+	for _, file := range files {
+		bar.Add(1)
+		archivo := file.Name()
+
+		path := archivo
+		content, err := os.ReadFile("files/" + path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		// Convert []byte to string and print to screen
+		text := string(content)
+		id_expediente := archivo[0:14]
+		IdTipoArchivo := 6
+		t := time.Now()
+
+		hoy := t.Format("2006-01-02")
+		tiempo := t.Format("15:04:05")
+		descripcion := "CARGA HISTORICA"
+		id_perfil_carga := 2
+		id_busqueda := 0
+		estatus := 1
+		estatus_localizado := 0
+
+		c := Datos{
+			id_expediente:      id_expediente,
+			IdTipoArchivo:      IdTipoArchivo,
+			hoy:                hoy,
+			tiempo:             tiempo,
+			usuarioCarga:       "atencion_neixar",
+			path:               path,
+			text:               text,
+			descripcion:        descripcion,
+			id_perfil_carga:    id_perfil_carga,
+			id_busqueda:        id_busqueda,
+			estatus:            estatus,
+			estatus_localizado: estatus_localizado,
+		}
+
+		err = insertar(c)
+		if err != nil {
+			log.Printf("Error insertando: %v %v\n", err, archivo)
+		} else {
+			log.Printf("Insertado correctamente: %v \n", archivo)
+		}
+
+		time.Sleep(time.Second * 1)
+
+		i++
+	}
+
+	log.Printf("/******************* Robot Termino **********************/ \n")
+	defer elapsed("Robot termino:")()
 	fmt.Println("Finalizando aplicación....")
+	time.Sleep(time.Second * 3)
+
 }
 
 //termina main
@@ -125,13 +158,13 @@ func insertar(c Datos) (e error) {
 	defer db.Close()
 
 	// Preparamos para prevenir inyecciones SQL
-	sentenciaPreparada, err := db.Prepare("INSERT INTO archivo_expediente (id_expediente, id_tipo_archivo, fecha_carga, hora_carga, id_usuario_carga, nombre_archivo, archivo, archivo_descripcion, id_perfil_carga, id_busqueda, estatus_expediente) VALUES(?, ?, ?,?, ?, ?,?, ?, ?,?, ?)")
+	sentenciaPreparada, err := db.Prepare("INSERT INTO archivo_expediente (id_expediente, id_tipo_archivo, fecha_carga, hora_carga, id_usuario_carga, nombre_archivo, archivo, archivo_descripcion, id_perfil_carga, id_busqueda, estatus_expediente, estatus_localizado) VALUES(?, ?, ?,?, ?, ?,?, ?, ?,?, ?,?)")
 	if err != nil {
 		return err
 	}
 	defer sentenciaPreparada.Close()
 	// Ejecutar sentencia, un valor por cada '?'
-	_, err = sentenciaPreparada.Exec(c.id_expediente, c.IdTipoArchivo, c.hoy, c.tiempo, c.usuarioCarga, c.path, c.text, c.descripcion, c.id_perfil_carga, c.id_busqueda, c.estatus)
+	_, err = sentenciaPreparada.Exec(c.id_expediente, c.IdTipoArchivo, c.hoy, c.tiempo, c.usuarioCarga, c.path, c.text, c.descripcion, c.id_perfil_carga, c.id_busqueda, c.estatus, c.estatus_localizado)
 	if err != nil {
 		return err
 	}

@@ -1,0 +1,22 @@
+2022/02/24 20:47:23 /******************EMPIEZA INSERT *******************/
+2022/02/24 20:47:23 Insertado correctamente: CBPEH-001-2019--RAR.pdf 
+2022/02/24 20:47:24 Insertado correctamente: CBPEH-002-2019--SYG.pdf 
+2022/02/24 20:47:25 Insertado correctamente: CBPEH-003-2019--YBR.pdf 
+2022/02/24 20:47:27 Insertado correctamente: CBPEH-004-2019-RHEG.pdf 
+2022/02/24 20:47:28 Insertado correctamente: CBPEH-005-2019--IGYJ.pdf 
+2022/02/24 20:47:30 Insertado correctamente: CBPEH-006-2019 - RGyL.pdf 
+2022/02/24 20:47:34 Insertado correctamente: CBPEH-007-2019--CALF.pdf 
+2022/02/24 20:47:35 Insertado correctamente: CBPEH-008-2019-SPM.pdf 
+2022/02/24 20:47:38 Insertado correctamente: CBPEH-009-2019--GACO.pdf 
+2022/02/24 20:47:39 /******************* Robot Termino **********************/ 
+2022/02/24 20:53:09 /****************** EMPIEZA INSERT *******************/
+2022/02/24 20:53:09 Error insertando: Error 1054: Unknown column 'id_tipo_archivos' in 'field list' CBPEH-001-2019--RAR.pdf
+2022/02/24 20:53:10 Error insertando: Error 1054: Unknown column 'id_tipo_archivos' in 'field list' CBPEH-002-2019--SYG.pdf
+2022/02/24 20:53:11 Error insertando: Error 1054: Unknown column 'id_tipo_archivos' in 'field list' CBPEH-003-2019--YBR.pdf
+2022/02/24 20:53:12 Error insertando: Error 1054: Unknown column 'id_tipo_archivos' in 'field list' CBPEH-004-2019-RHEG.pdf
+2022/02/24 20:53:13 Error insertando: Error 1054: Unknown column 'id_tipo_archivos' in 'field list' CBPEH-005-2019--IGYJ.pdf
+2022/02/24 20:53:14 Error insertando: Error 1054: Unknown column 'id_tipo_archivos' in 'field list' CBPEH-006-2019 - RGyL.pdf
+2022/02/24 20:53:15 Error insertando: Error 1054: Unknown column 'id_tipo_archivos' in 'field list' CBPEH-007-2019--CALF.pdf
+2022/02/24 20:53:16 Error insertando: Error 1054: Unknown column 'id_tipo_archivos' in 'field list' CBPEH-008-2019-SPM.pdf
+2022/02/24 20:53:17 Error insertando: Error 1054: Unknown column 'id_tipo_archivos' in 'field list' CBPEH-009-2019--GACO.pdf
+2022/02/24 20:53:18 /******************* Robot Termino **********************/ 
